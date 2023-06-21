@@ -61,7 +61,6 @@ function map_annual_avg(data_frame, fieldname)
 		chunk = DataFrame(filter(row -> occursin(string(year), row.time), data_frame))
 		avg = compute_arithmetic_avg(chunk[!, Symbol(fieldname)])
 		push!(df, avg)
-		println(avg)
 	end
 
 	return df
@@ -70,7 +69,12 @@ end
 
 # Função para recortar por intervalo de tempo.
 function clip_by_time(data_frame, t0, t1)
-	println(filter(row -> parse(Int, row.time[1:4]) >= 2000, data_frame))
+	return DataFrame(
+		filter(
+			row -> parse(Int, row.time[1:5]) >= t0 &&
+			parse(Int, row.time[1:5]) <= t1, data_frame
+		)
+	)
 end
 
 
@@ -86,13 +90,13 @@ function main()
 	depth = map_annual_avg(df, "depth")
 
 	#df1 = clip_by_time(df, 2000, 2020)
-	scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
+	#scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
 	#scatter(df1.depth, df1.mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
-	title!("Dispersão")
-	xlabel!("Profundidade")
-	ylabel!("Magnitude")
-	plot!()
-	savefig("annualavg.png")
+	#title!("Dispersão")
+	#xlabel!("Profundidade")
+	#ylabel!("Magnitude")
+	#plot!()
+	#savefig("annualavg.png")
 end
 
 
