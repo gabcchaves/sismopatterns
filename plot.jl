@@ -49,32 +49,45 @@ end
 
 # Função para computar média aritmética.
 function compute_arithmetic_avg(values)
-	return reduce(+, values) / length(values)
+	return length(values) != 0 ? reduce(+, values) / length(values) : 0
 end
 
 
-# Função para mapear a média anual de algumas variáveis.
-function map_annual_avg(data_frame, fieldname)
-	df = []
-
-	for year = 2000:2020
-		chunk = DataFrame(filter(row -> occursin(string(year), row.time), data_frame))
-		avg = compute_arithmetic_avg(chunk[!, Symbol(fieldname)])
-		push!(df, avg)
+# Função para mapear a média anual de algumas variáveis, por intervalo de
+# tempo.
+function map_annual_avg(data_frame, fieldname, t0, t1)
+	df = clip_by_time(data_frame, t0, t1)
+	array = []
+	for year in t0:t1
+		chunk_year = DataFrame(
+			filter(
+				row -> occursin(string(year), row.time),
+				df
+			)
+		)
+		if fieldname in names(chunk_year)
+			avg = compute_arithmetic_avg(chunk_year[!, Symbol(fieldname)])
+			push!(array, avg)
+			println(avg)
+		end
 	end
-
-	return df
+	println()
+	return array
 end
 
 
 # Função para recortar por intervalo de tempo.
 function clip_by_time(data_frame, t0, t1)
-	return DataFrame(
-		filter(
-			row -> parse(Int, row.time[1:5]) >= t0 &&
-			parse(Int, row.time[1:5]) <= t1, data_frame
+	if t0 <= t1
+		return DataFrame(
+			filter(
+				row -> parse(Int, row.time[1:5]) >= t0 &&
+				parse(Int, row.time[1:5]) <= t1, data_frame
+			)
 		)
-	)
+	else
+		throw(Exception("Limite inferior do intervalo deve ser menor ou igual ao limite superior."))
+	end
 end
 
 
@@ -86,17 +99,17 @@ function main()
 
 	df = fetch_data(input_file, ["time", "mag", "depth", "longitude", "latitude"])
 
-	mag = map_annual_avg(df, "mag")
-	depth = map_annual_avg(df, "depth")
+	mag = map_annual_avg(df, "mag", 1980, 2020)
+	depth = map_annual_avg(df, "depth", 1980, 2020)
 
 	#df1 = clip_by_time(df, 2000, 2020)
-	#scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
+	scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
 	#scatter(df1.depth, df1.mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
-	#title!("Dispersão")
-	#xlabel!("Profundidade")
-	#ylabel!("Magnitude")
-	#plot!()
-	#savefig("annualavg.png")
+	title!("Dispersão")
+	xlabel!("Profundidade")
+	ylabel!("Magnitude")
+	plot!()
+	savefig(length(output_file) > 0 ? output_file : string(output_file, ".png"))
 end
 
 
