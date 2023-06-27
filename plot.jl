@@ -49,7 +49,12 @@ end
 
 # Função para computar média aritmética.
 function compute_arithmetic_avg(values)
-	return length(values) != 0 ? reduce(+, values) / length(values) : 0
+	if typeof(values[1]) != Float64
+		numeric_values = map(x -> parse(Float64, x), values)
+		return length(numeric_values) != 0 ? reduce(+, numeric_values) / length(numeric_values) : 0
+	else
+		return length(values) != 0 ? reduce(+, values) / length(values) : 0
+	end
 end
 
 
@@ -66,12 +71,11 @@ function map_annual_avg(data_frame, fieldname, t0, t1)
 			)
 		)
 		if fieldname in names(chunk_year)
-			avg = compute_arithmetic_avg(chunk_year[!, Symbol(fieldname)])
+			numeric_values = filter(x -> !isempty(x), chunk_year[!, Symbol(fieldname)])
+			avg = compute_arithmetic_avg(numeric_values)
 			push!(array, avg)
-			println(avg)
 		end
 	end
-	println()
 	return array
 end
 
@@ -81,8 +85,9 @@ function clip_by_time(data_frame, t0, t1)
 	if t0 <= t1
 		return DataFrame(
 			filter(
-				row -> parse(Int, row.time[1:5]) >= t0 &&
-				parse(Int, row.time[1:5]) <= t1, data_frame
+				row -> year(DateTime(row.time, DateFormat("yyyy-mm-ddTHH:MM:SS.sssZ"))) >= t0 &&
+				year(DateTime(row.time, DateFormat("yyyy-mm-ddTHH:MM:SS.sssZ"))) <= t1,
+				data_frame
 			)
 		)
 	else
@@ -104,7 +109,7 @@ function main()
 
 	#df1 = clip_by_time(df, 2000, 2020)
 	scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
-	#scatter(df1.depth, df1.mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
+	##scatter(df1.depth, df1.mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
 	title!("Dispersão")
 	xlabel!("Profundidade")
 	ylabel!("Magnitude")
