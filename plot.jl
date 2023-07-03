@@ -1,4 +1,4 @@
-using Plots, CSV, DataFrames, ArgParse, Dates, IterTools
+using Plots, CSV, DataFrames, ArgParse, Dates, IterTools, LsqFit
 
 
 # Função para receber argumentos passados ao programa.
@@ -96,6 +96,13 @@ function clip_by_time(data_frame, t0, t1)
 end
 
 
+# Função para ajustar o modelo que lhe for passado como argumento.
+function fit(model, p0, xdata, ydata)
+	fit = curve_fit(model, xdata, ydata, p0)
+	return coef(fit)
+end
+
+
 # Função principal.
 function main()
 	parsed_args = parse_cli_args()
@@ -104,11 +111,11 @@ function main()
 
 	df = fetch_data(input_file, ["time", "mag", "depth", "longitude", "latitude"])
 
-	mag = map_annual_avg(df, "mag", 1980, 2020)
-	depth = map_annual_avg(df, "depth", 1980, 2020)
+	mag = map_annual_avg(df, "mag", 1960, 2020)
+	depth = map_annual_avg(df, "depth", 1960, 2020)
 
 	#df1 = clip_by_time(df, 2000, 2020)
-	scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
+	scatter(depth, mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false, color = :green)
 	##scatter(df1.depth, df1.mag, markersize = 5, markeralpha = 1, markerstrokewidth = 0, legend = false)
 	title!("Dispersão")
 	xlabel!("Profundidade")
